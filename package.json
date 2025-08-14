@@ -1,0 +1,43 @@
+{
+  "name": "js-experiment",
+  "version": "1.0.0",
+  "description": "A basic Node.js project.",
+  "main": "main.ts",
+  "scripts": {
+    "dev": "nodemon --watch \"*\" --ext \"ts\" --exec \"ts-node --transpileOnly main.ts\"",
+    "test": "cross-env NODE_OPTIONS=\"--max-old-space-size=6144\" jest --forceExit --runInBand --silent --clearMocks"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.56.0",
+    "@unified-api/typescript-sdk": "^2.72.5",
+    "dotenv": "^17.2.1",
+    "openai": "^5.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.10",
+    "axios-mock-adapter": "^2.1.0",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.4.2",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0 <23.0.0"
+  },
+  "_moduleAliases": {
+    "@services": "src/services",
+    "@models": "src/models",
+    "@server": "src/server",
+    "@integrations": "src/integrations",
+    "@database": "src/database",
+    "@src": "src"
+  },
+  "overrides": {
+    "typeorm": {
+      "mongodb": "^6.9.0"
+    }
+  }
+}

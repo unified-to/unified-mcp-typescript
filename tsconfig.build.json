@@ -1,0 +1,5 @@
+{
+    "extends": "./tsconfig",
+    "include": ["./src/**/*"],
+    "exclude": ["node_modules", "**/*.test.ts", "./src/integrations/_tests/_common.ts", "./src/cli/index.ts", "./src/services/test_fixer.ts"]
+}
