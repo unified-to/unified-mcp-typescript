@@ -11,7 +11,6 @@ The project demonstrates how to integrate Unified MCP servers with different AI 
 - **OpenAI Integration**: Uses OpenAI's response mode with MCP tools
 - **Anthropic Integration**: Uses Claude with MCP server support
 - **Unified MCP**: Connects to Unified's MCP server for email and calendar operations
-- **TypeScript Support**: Full TypeScript implementation with proper type definitions
 
 ## Prerequisites
 
@@ -100,7 +99,7 @@ The `connectionId` variable in `main.ts` needs to be updated with your active Un
 ## Project Structure
 
 ```
-js-experiment/
+mcp-test-script/
 ├── main.ts              # Main application logic
 ├── package.json         # Dependencies and scripts
 ├── tsconfig.json        # TypeScript configuration
@@ -131,30 +130,8 @@ The Anthropic example demonstrates:
 - `dotenv`: Environment variable management
 - `typescript`: TypeScript support
 
-## Development
-
-### Building
-
-```bash
-npm run build
-```
-
-### Type Checking
-
-```bash
-npm run type-check
-```
-
 ## Notes
 
 - The connection ID in the code is hardcoded and should be updated for your specific workspace
 - The examples use specific prompts and may need modification for your use case
 - Ensure your Unified API key has the necessary permissions for the operations you're testing
-
-## License
-
-[Add your license information here]
-
-## Contributing
-
-[Add contribution guidelines if applicable]
