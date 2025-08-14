@@ -15,7 +15,7 @@ export async function main() {
     }
 }
 
-const connectionId = "689c92e5b19be53f6ba6c781"; // this is the connection id I found active in your workspace
+const connectionId = ""; // this is the connection id I found active in your workspace
 const token = process.env.UNIFIED_API_KEY || "";
 
 async function testOpenAI() {
