@@ -5,7 +5,8 @@
   "main": "main.ts",
   "scripts": {
     "dev": "nodemon --watch \"*\" --ext \"ts\" --exec \"ts-node --transpileOnly main.ts\"",
-    "test": "cross-env NODE_OPTIONS=\"--max-old-space-size=6144\" jest --forceExit --runInBand --silent --clearMocks"
+    "test": "cross-env NODE_OPTIONS=\"--max-old-space-size=6144\" jest --forceExit --runInBand --silent --clearMocks",
+    "start": "ts-node main.ts"
   },
   "author": "",
   "license": "ISC",
