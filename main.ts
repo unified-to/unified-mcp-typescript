@@ -57,7 +57,7 @@ async function testOpenAI() {
             },
         ],
         instructions: `You are a helpful assistant that can use the following tools to get information about the user's email, and ${systemPrompt}. My timezone is America/Regina`,
-        input: `Create a message to JC Rolluqui (jc@unified.to)with subject "Test Email 2 - August 14 UnifiedMCP" and body "This is a test email from UnifiedMCP" fromm sender 'jc@unified.to' to the unread emails`,
+        input: `Create a message to  {recipient} with subject "Test Email 2 - August 14 UnifiedMCP" and body "This is a test email from UnifiedMCP" fromm sender '{sender}' to the unread emails`,
     });
 
     for await (const chunk of completion.output) {
@@ -70,7 +70,7 @@ async function testAnthropic() {
     const params = new URLSearchParams({
         token,
         connection: connectionId,
-        // dc: "eu",
+        dc: "local",
     });
 
     const anthropic = new Anthropic({
@@ -78,13 +78,17 @@ async function testAnthropic() {
             process.env.ANTHROPIC_API_KEY,
     });
 
+    const serverUrl = `${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/sse?${params.toString()}`;
+
+    console.log("serverUrl", serverUrl);
+
     const completion = await anthropic.beta.messages.create({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
         messages: [
             {
                 role: "user",
-                content: `Create a Google event for tomorrow with title: "Meeting with team" and description: "Discuss project updates and next steps." for 30 minutes. at 10:00 AM America/Regina time.`,
+                content: `Create a message to  {recipient} with subject "Test Email 2 - August 14 UnifiedMCP" and body "This is a test email from UnifiedMCP" fromm sender '{sender}' to the unread emails`,
             },
         ],
         stream: false,
