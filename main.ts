@@ -3,51 +3,102 @@ dotenv.config();
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 
-export async function main() {
-    // get args
-    const args = process.argv.slice(2);
-    const input = args[0];
 
-    if (input === "anthropic") {
-        await testAnthropic();
-    } else {
-        await testOpenAI();
+// inputs
+// --connection - required
+// --api_key - required
+// --action (gettools, prompt) - required
+// --model (openai, anthropic) - required if action is prompt
+// --message (prompt) - required if action is prompt
+
+export async function main() {
+    // Parse args
+    const args = process.argv.slice(2);
+    const argMap: Record<string, string> = {};
+    for (let i = 0; i < args.length; i++) {
+        if (args[i].startsWith("--")) {
+            const key = args[i].replace(/^--/, "");
+            const value = args[i + 1] && !args[i + 1].startsWith("--") ? args[i + 1] : "true";
+            argMap[key] = value;
+            if (value !== "true") i++;
+        }
+    }
+
+    // Required args
+    const connection = argMap["connection"];
+    const action = argMap["action"];
+    const model = argMap["model"];
+    const message = argMap["message"];
+    const dc = argMap["dc"] || "local";
+
+    if (!connection) {
+        console.error("Missing required argument: --connection");
+        process.exit(1);
+    }
+    if (!action) {
+        console.error("Missing required argument: --action");
+        process.exit(1);
+    }
+
+    if (action === "prompt" && !message) {
+        console.error("Missing required argument: --message (required for prompt action)");
+        process.exit(1);
+    }
+
+    if (action === "gettools") {
+        // Placeholder for gettools logic
+        await getTools(connection, process.env.UNIFIED_API_KEY || "", dc);
+        process.exit(0);
+    }
+
+    if (action === "prompt") {
+        if (model === "anthropic") {
+            await testAnthropic(connection, message, dc);
+        } else if (model === "openai") {
+            await testOpenAI(connection, message, dc);
+        } else {
+            await testOpenAI(connection, message, dc);
+            process.exit(1);
+        }
     }
 }
 
-const connectionId = ""; // this is the connection id I found active in your workspace
-const token = process.env.UNIFIED_API_KEY || "";
+async function getTools(connection: string, api_key: string, dc: string) {
+    const params = new URLSearchParams({
+        token: api_key,
+        connection,
+        dc,
+    });
 
-async function testOpenAI() {
+    const tools = await fetch(`${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/tools?${params.toString()}`);
+    const toolsJson = await tools.json();
+    console.log(JSON.stringify(toolsJson, null, 2));
+}
+
+
+
+async function testOpenAI(connection: string, message: string, dc: string) {
     const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
+        apiKey: process.env.OPENAI_API_KEY || "",
     });
     const params = new URLSearchParams({
-        token,
+        token: process.env.UNIFIED_API_KEY || "",
         type: "openai",
-        dc: "local",
-        connection: connectionId,
+        dc,
+        connection,
     });
 
-    // // Uncomment this for response mode
-    const now = new Date();
-    const todayDate =
-        now.toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        }) +
-        ` at ${now.getHours()}:${now.getMinutes().toString().padStart(2, "0")} UTC`;
-
-    const systemPrompt = `Today is ${todayDate} ${now.getFullYear()}`;
 
     const serverUrl = `${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/sse?${params.toString()}`;
 
     console.log("serverUrl", serverUrl);
 
+    // get the latest model from open ai
+    const models = await openai.models.list();
+    const latestModel = models.data[0].id;
+
     const completion = await openai.responses.create({
-        model: "gpt-4o-mini",
+        model: latestModel,
         tools: [
             {
                 type: "mcp",
@@ -56,8 +107,8 @@ async function testOpenAI() {
                 require_approval: "never",
             },
         ],
-        instructions: `You are a helpful assistant that can use the following tools to get information about the user's email, and ${systemPrompt}. My timezone is America/Regina`,
-        input: `Create a message to  {recipient} with subject "Test Email 2 - August 14 UnifiedMCP" and body "This is a test email from UnifiedMCP" fromm sender '{sender}' to the unread emails`,
+        instructions: `You are a helpful assistant my stuff[jc@unified.to]`,
+        input: message,
     });
 
     for await (const chunk of completion.output) {
@@ -66,11 +117,11 @@ async function testOpenAI() {
     }
 }
 
-async function testAnthropic() {
+async function testAnthropic(connection: string, message: string, dc: string) {
     const params = new URLSearchParams({
-        token,
-        connection: connectionId,
-        dc: "local",
+        token: process.env.UNIFIED_API_KEY || "",
+        connection,
+        dc,
     });
 
     const anthropic = new Anthropic({
@@ -82,13 +133,18 @@ async function testAnthropic() {
 
     console.log("serverUrl", serverUrl);
 
+    // get the latest model from anthropic
+    const models = await anthropic.models.list();
+    const latestModel = models.data[0].id;
+
     const completion = await anthropic.beta.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: latestModel,
         max_tokens: 1024,
         messages: [
             {
+
                 role: "user",
-                content: `Create a message to  {recipient} with subject "Test Email 2 - August 14 UnifiedMCP" and body "This is a test email from UnifiedMCP" fromm sender '{sender}' to the unread emails`,
+                content: message,
             },
         ],
         stream: false,

@@ -8,9 +8,10 @@ The project demonstrates how to integrate Unified MCP servers with different AI 
 
 ## Features
 
-- **OpenAI Integration**: Uses OpenAI's response mode with MCP tools
-- **Anthropic Integration**: Uses Claude with MCP server support
+- **OpenAI Integration**: Uses OpenAI's response mode with MCP tools and automatically selects the latest available model
+- **Anthropic Integration**: Uses Claude with MCP server support and automatically selects the latest available model
 - **Unified MCP**: Connects to Unified's MCP server for email and calendar operations
+- **Dynamic Model Selection**: Automatically fetches and uses the latest models from both OpenAI and Anthropic APIs
 
 ## Prerequisites
 
@@ -44,57 +45,68 @@ UNIFIED_MCP_URL=https://mcp-api.unified.to
 
 ## Usage
 
-### Running the OpenAI Example
+The application now uses command-line arguments for configuration. All examples require building the TypeScript first:
 
 ```bash
-npm start
-# or
-npm run dev
+npm run build
 ```
 
-This will run the OpenAI integration by default, which:
-- Creates an email message using Unified MCP
-- Demonstrates response mode streaming
-- Uses the connection ID configured in the code
+### Command-Line Arguments
 
-### Running the Anthropic Example
+- `--connection` (required): Your Unified workspace connection ID
+- `--action` (required): Action to perform (`gettools` or `prompt`)
+- `--model` (required for prompt action): AI model to use (`openai` or `anthropic`)
+- `--message` (required for prompt action): The message/prompt to send
+
+### Running Examples
+
+#### Get Available Tools
 
 ```bash
-npm start anthropic
+node run start -- --connection YOUR_CONNECTION_ID --action gettools
 ```
 
-This will run the Anthropic integration, which:
-- Creates a Google Calendar event using Unified MCP
-- Demonstrates MCP server integration with Claude
+#### OpenAI Prompt Example
+
+```bash
+node run start -- --connection YOUR_CONNECTION_ID --action prompt --model openai --message "Create an email draft"
+```
+
+#### Anthropic Prompt Example
+
+```bash
+node run start -- --connection YOUR_CONNECTION_ID --action prompt --model anthropic --message "Create a calendar event for tomorrow at 2pm"
+```
 
 ## Configuration
 
 ### Environment Variables
 
-The following environment variables need to be configured in your `.env` file:
+The following environment variables must be configured in your `.env` file:
 
 #### API Keys
-- **`OPENAI_API_KEY`**: Your OpenAI API key for accessing GPT models and response mode features
+- **`OPENAI_API_KEY`**: Your OpenAI API key for accessing GPT models
   - Get this from [OpenAI Platform](https://platform.openai.com/api-keys)
-  - Required for the OpenAI integration example
+  - Required when using `--model openai`
 
 - **`ANTHROPIC_API_KEY`**: Your Anthropic API key for accessing Claude models
   - Get this from [Anthropic Console](https://console.anthropic.com/)
-  - Required for the Anthropic integration example
+  - Required when using `--model anthropic`
 
 - **`UNIFIED_API_KEY`**: Your Unified API key for accessing the MCP server
   - Get this from your [Unified Dashboard](https://app.unified.to/)
-  - Required for both OpenAI and Anthropic integrations
+  - Required for all operations
 
 #### MCP Server Configuration
 - **`UNIFIED_MCP_URL`**: The URL of the Unified MCP server
   - Default: `https://mcp-api.unified.to`
   - Optional: Only set if you need to use a different MCP server endpoint
-  - Used by both integration examples
 
-### Connection ID
+### Required Command-Line Arguments
 
-The `connectionId` variable in `main.ts` needs to be updated with your active Unified workspace connection ID. You can find this in your Unified dashboard.
+- **Connection ID**: Pass your active Unified workspace connection ID using `--connection`
+  - Find this in your [Unified Dashboard](https://app.unified.to/)
+  - Required for all operations
 
 ## Project Structure
 
@@ -109,18 +121,48 @@ mcp-test-script/
 
 ## Examples
 
-### OpenAI Response Mode
+### Getting Available Tools
 
-The OpenAI example demonstrates:
-- Creating email messages through Unified MCP
-- Streaming responses with response mode
-- Tool integration for external service access
+To see what tools are available through the Unified MCP server:
 
-### Anthropic MCP Integration
+```bash
+node dist/main.js --connection conn_12345 --action gettools
+```
 
-The Anthropic example demonstrates:
-- Creating calendar events through Unified MCP
-- MCP server configuration
+### OpenAI Integration
+
+Create an email draft using OpenAI's response mode with streaming:
+
+```bash
+node dist/main.js \
+  --connection conn_12345 \
+  --action prompt \
+  --model openai \
+  --message "Create an email to john@example.com about the quarterly report"
+```
+
+This demonstrates:
+- Automatic selection of the latest OpenAI model available
+- OpenAI's response mode with streaming output
+- MCP tool integration for email operations
+- Real-time tool execution
+
+### Anthropic Integration
+
+Create a calendar event using Claude:
+
+```bash
+node dist/main.js \
+  --connection conn_12345 \
+  --action prompt \
+  --model anthropic \
+  --message "Schedule a team meeting for next Friday at 3pm titled 'Project Review'"
+```
+
+This demonstrates:
+- Automatic selection of the latest Anthropic model available
+- Anthropic's MCP server integration
+- Calendar operations through Unified MCP
 - Non-streaming message completion
 
 ## Dependencies
@@ -132,6 +174,10 @@ The Anthropic example demonstrates:
 
 ## Notes
 
-- The connection ID in the code is hardcoded and should be updated for your specific workspace
-- The examples use specific prompts and may need modification for your use case
+- **Latest Model Selection**: The script automatically fetches and uses the latest available models from both OpenAI and Anthropic APIs, ensuring you're always using the most up-to-date capabilities
+- Connection ID is passed as a command-line argument for flexibility
+- All API keys are configured via environment variables for security
+- The `gettools` action is not yet implemented but the command structure is in place
 - Ensure your Unified API key has the necessary permissions for the operations you're testing
+- Build the TypeScript code with `npm run build` before running the examples
+- Model selection is dynamic - no need to specify exact model names as the script will use whatever is the latest available
