@@ -1,4 +1,4 @@
-# JS Experiment - Unified MCP Integration
+# Unified MCP Typescript Example
 
 This repository contains experimental JavaScript/TypeScript code for testing Unified MCP (Model Context Protocol) integrations with OpenAI and Anthropic APIs.
 
