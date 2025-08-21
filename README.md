@@ -152,7 +152,7 @@ mcp-test-script/
 To see what tools are available through the Unified MCP server:
 
 ```bash
-node dist/main.js --connection conn_12345 --action gettools
+npm run start -- --connection conn_12345 --action gettools
 ```
 
 ### OpenAI Integration
@@ -160,7 +160,7 @@ node dist/main.js --connection conn_12345 --action gettools
 Create an email draft using OpenAI's response mode with streaming:
 
 ```bash
-node dist/main.js \
+npm run start -- \
   --connection conn_12345 \
   --action prompt \
   --model openai \
@@ -178,7 +178,7 @@ This demonstrates:
 Create a calendar event using Claude:
 
 ```bash
-node dist/main.js \
+npm run start -- \
   --connection conn_12345 \
   --action prompt \
   --model anthropic \
@@ -196,7 +196,7 @@ This demonstrates:
 Create and send an email using Cohere's Command model:
 
 ```bash
-node dist/main.js \
+npm run start -- \
   --connection conn_12345 \
   --action prompt \
   --model cohere \
@@ -214,7 +214,7 @@ This demonstrates:
 Manage multiple tasks using Google's Gemini model:
 
 ```bash
-node dist/main.js \
+npm run start -- \
   --connection conn_12345 \
   --action prompt \
   --model gemini \
