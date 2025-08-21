@@ -80,7 +80,7 @@ async function getTools(connection: string, api_key: string, dc: string) {
         dc,
     });
 
-    const tools = await fetch(`${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/tools?${params.toString()}`);
+    const tools = await fetch(`${process.env.UNIFIED_MCP_URL}/tools?${params.toString()}`);
     const toolsJson = await tools.json();
     console.log(JSON.stringify(toolsJson, null, 2));
 }
@@ -99,7 +99,7 @@ async function runOpenAI(connection: string, message: string, dc: string) {
     });
 
 
-    const serverUrl = `${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/sse?${params.toString()}`;
+    const serverUrl = `${process.env.UNIFIED_MCP_URL}/sse?${params.toString()}`;
 
     console.log("serverUrl", serverUrl);
 
@@ -139,7 +139,7 @@ async function runAnthropic(connection: string, message: string, dc: string) {
             process.env.ANTHROPIC_API_KEY,
     });
 
-    const serverUrl = `${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/sse?${params.toString()}`;
+    const serverUrl = `${process.env.UNIFIED_MCP_URL}/sse?${params.toString()}`;
 
     console.log("serverUrl", serverUrl);
 
@@ -161,7 +161,7 @@ async function runAnthropic(connection: string, message: string, dc: string) {
         mcp_servers: [
             {
                 type: "url",
-                url: `${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/sse?${params.toString()}`, // change url as needed
+                url: `${process.env.UNIFIED_MCP_URL}/sse?${params.toString()}`, // change url as needed
                 name: "unifiedMCP",
             },
         ],
@@ -184,7 +184,7 @@ async function runCohere(connection: string, message: string, dc: string) {
         dc,
     });
 
-    const tools = await fetch(`${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/tools?${params.toString()}`);
+    const tools = await fetch(`${process.env.UNIFIED_MCP_URL}/tools?${params.toString()}`);
     const toolsJson = await tools.json();
     const completion = await cohereClient.chat({
         model: "command-a-03-2025",
@@ -200,7 +200,7 @@ async function runCohere(connection: string, message: string, dc: string) {
     console.log(completion.message.content);
     for (const toolCall of completion?.message?.toolCalls || []) {
         // call mcp server with toolCallId
-        const toolCallResponse = await fetch(`${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/mcp/tools/${toolCall.function?.name}/call?${params.toString()}`, {
+        const toolCallResponse = await fetch(`${process.env.UNIFIED_MCP_URL}/mcp/tools/${toolCall.function?.name}/call?${params.toString()}`, {
             method: "POST",
             body: toolCall.function?.arguments || "{}",
         });
@@ -221,7 +221,7 @@ async function runGemini(connection: string, message: string, dc: string) {
         dc,
     });
 
-    const serverUrl = `${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/mcp?${params.toString()}`;
+    const serverUrl = `${process.env.UNIFIED_MCP_URL}/mcp?${params.toString()}`;
 
 
 
