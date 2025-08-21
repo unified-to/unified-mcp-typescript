@@ -234,9 +234,12 @@ async function runGemini(connection: string, message: string, dc: string) {
 
     await client.connect(transport);
 
+    // get the latest model from gemini
+    const models = await gemini.models.list();
+    const latestModel = models.page.filter((model: any) => model.name.includes("gemini") && !model.name.includes("embedding")).pop()?.name || "gemini-2.0-flash";
 
     const completion = await gemini.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: latestModel?.replace("model/", ""),
         contents: message,
         config: {
             tools: [mcpToTool(client)],

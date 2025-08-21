@@ -242,7 +242,5 @@ This demonstrates:
 - **Latest Model Selection**: The script automatically fetches and uses the latest available models from both OpenAI and Anthropic APIs, ensuring you're always using the most up-to-date capabilities
 - Connection ID is passed as a command-line argument for flexibility
 - All API keys are configured via environment variables for security
-- The `gettools` action is not yet implemented but the command structure is in place
 - Ensure your Unified API key has the necessary permissions for the operations you're testing
-- Build the TypeScript code with `npm run build` before running the examples
 - Model selection is dynamic - no need to specify exact model names as the script will use whatever is the latest available
