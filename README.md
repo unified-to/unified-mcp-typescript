@@ -10,8 +10,10 @@ The project demonstrates how to integrate Unified MCP servers with different AI 
 
 - **OpenAI Integration**: Uses OpenAI's response mode with MCP tools and automatically selects the latest available model
 - **Anthropic Integration**: Uses Claude with MCP server support and automatically selects the latest available model
+- **Cohere Integration**: Uses Cohere's Command models with MCP tool integration and manual tool call execution
+- **Gemini Integration**: Uses Google's Gemini models with native MCP client support and streaming responses
 - **Unified MCP**: Connects to Unified's MCP server for email and calendar operations
-- **Dynamic Model Selection**: Automatically fetches and uses the latest models from both OpenAI and Anthropic APIs
+- **Dynamic Model Selection**: Automatically fetches and uses the latest models from OpenAI and Anthropic APIs
 
 ## Prerequisites
 
@@ -20,6 +22,8 @@ The project demonstrates how to integrate Unified MCP servers with different AI 
 - API keys for:
   - OpenAI API
   - Anthropic API
+  - Cohere API
+  - Google Gemini API
   - Unified API
 
 ## Installation
@@ -39,6 +43,8 @@ npm install
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+COHERE_API_KEY=your_cohere_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 UNIFIED_API_KEY=your_unified_api_key_here
 UNIFIED_MCP_URL=https://mcp-api.unified.to
 ```
@@ -55,7 +61,7 @@ npm run build
 
 - `--connection` (required): Your Unified workspace connection ID
 - `--action` (required): Action to perform (`gettools` or `prompt`)
-- `--model` (required for prompt action): AI model to use (`openai` or `anthropic`)
+- `--model` (required for prompt action): AI model to use (`openai`, `anthropic`, `cohere`, or `gemini`)
 - `--message` (required for prompt action): The message/prompt to send
 
 ### Running Examples
@@ -78,6 +84,18 @@ node run start -- --connection YOUR_CONNECTION_ID --action prompt --model openai
 node run start -- --connection YOUR_CONNECTION_ID --action prompt --model anthropic --message "Create a calendar event for tomorrow at 2pm"
 ```
 
+#### Cohere Prompt Example
+
+```bash
+node run start -- --connection YOUR_CONNECTION_ID --action prompt --model cohere --message "Draft an email to the team about our upcoming project milestone"
+```
+
+#### Gemini Prompt Example
+
+```bash
+node run start -- --connection YOUR_CONNECTION_ID --action prompt --model gemini --message "Schedule a client meeting and send a follow-up email"
+```
+
 ## Configuration
 
 ### Environment Variables
@@ -92,6 +110,14 @@ The following environment variables must be configured in your `.env` file:
 - **`ANTHROPIC_API_KEY`**: Your Anthropic API key for accessing Claude models
   - Get this from [Anthropic Console](https://console.anthropic.com/)
   - Required when using `--model anthropic`
+
+- **`COHERE_API_KEY`**: Your Cohere API key for accessing Command models
+  - Get this from [Cohere Dashboard](https://dashboard.cohere.com/)
+  - Required when using `--model cohere`
+
+- **`GEMINI_API_KEY`**: Your Google Gemini API key for accessing Gemini models
+  - Get this from [Google AI Studio](https://aistudio.google.com/)
+  - Required when using `--model gemini`
 
 - **`UNIFIED_API_KEY`**: Your Unified API key for accessing the MCP server
   - Get this from your [Unified Dashboard](https://app.unified.to/)
@@ -165,10 +191,49 @@ This demonstrates:
 - Calendar operations through Unified MCP
 - Non-streaming message completion
 
+### Cohere Integration
+
+Create and send an email using Cohere's Command model:
+
+```bash
+node dist/main.js \
+  --connection conn_12345 \
+  --action prompt \
+  --model cohere \
+  --message "Compose and send an email to the marketing team about our new product launch timeline"
+```
+
+This demonstrates:
+- Cohere's Command-A model (command-a-03-2025)
+- Manual MCP tool integration with explicit tool call handling
+- Email operations through Unified MCP
+- Tool execution with response processing
+
+### Gemini Integration
+
+Manage multiple tasks using Google's Gemini model:
+
+```bash
+node dist/main.js \
+  --connection conn_12345 \
+  --action prompt \
+  --model gemini \
+  --message "Check my calendar for conflicts and schedule a client presentation for next week"
+```
+
+This demonstrates:
+- Google's Gemini 2.0 Flash model
+- Native MCP client integration using the MCP SDK
+- Direct client connection to Unified MCP server
+- Advanced tool integration with streaming content support
+
 ## Dependencies
 
 - `openai`: OpenAI API client
 - `@anthropic-ai/sdk`: Anthropic Claude API client
+- `cohere-ai`: Cohere API client
+- `@google/genai`: Google Gemini API client
+- `@modelcontextprotocol/sdk`: MCP SDK for direct client connections
 - `dotenv`: Environment variable management
 - `typescript`: TypeScript support
 

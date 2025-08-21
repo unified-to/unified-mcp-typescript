@@ -2,13 +2,16 @@ import dotenv from "dotenv";
 dotenv.config();
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
-
+import { CohereClientV2 } from "cohere-ai";
+import { GoogleGenAI, mcpToTool } from "@google/genai";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 // inputs
 // --connection - required
 // --api_key - required
 // --action (gettools, prompt) - required
-// --model (openai, anthropic) - required if action is prompt
+// --model (openai, anthropic, cohere) - required if action is prompt
 // --message (prompt) - required if action is prompt
 
 export async function main() {
@@ -52,13 +55,20 @@ export async function main() {
     }
 
     if (action === "prompt") {
-        if (model === "anthropic") {
-            await testAnthropic(connection, message, dc);
-        } else if (model === "openai") {
-            await testOpenAI(connection, message, dc);
-        } else {
-            await testOpenAI(connection, message, dc);
-            process.exit(1);
+        switch (model) {
+            case "anthropic":
+                await runAnthropic(connection, message, dc);
+                break;
+            case "cohere":
+                await runCohere(connection, message, dc);
+                break;
+            case "gemini":
+                await runGemini(connection, message, dc);
+                break;
+            case "openai":
+            default:
+                await runOpenAI(connection, message, dc);
+                break;
         }
     }
 }
@@ -77,7 +87,7 @@ async function getTools(connection: string, api_key: string, dc: string) {
 
 
 
-async function testOpenAI(connection: string, message: string, dc: string) {
+async function runOpenAI(connection: string, message: string, dc: string) {
     const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY || "",
     });
@@ -117,7 +127,7 @@ async function testOpenAI(connection: string, message: string, dc: string) {
     }
 }
 
-async function testAnthropic(connection: string, message: string, dc: string) {
+async function runAnthropic(connection: string, message: string, dc: string) {
     const params = new URLSearchParams({
         token: process.env.UNIFIED_API_KEY || "",
         connection,
@@ -158,7 +168,90 @@ async function testAnthropic(connection: string, message: string, dc: string) {
         betas: ["mcp-client-2025-04-04"],
     });
 
-    console.log(completion);
+    console.log("response", JSON.stringify(completion, null, 2));
+}
+
+async function runCohere(connection: string, message: string, dc: string) {
+
+    const cohereClient = new CohereClientV2({
+        token: process.env.COHERE_API_KEY || "",
+    });
+
+    const params = new URLSearchParams({
+        token: process.env.UNIFIED_API_KEY || "",
+        connection,
+        type: "cohere",
+        dc,
+    });
+
+    const tools = await fetch(`${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/tools?${params.toString()}`);
+    const toolsJson = await tools.json();
+    const completion = await cohereClient.chat({
+        model: "command-a-03-2025",
+        messages: [
+            {
+                role: "user",
+                content: message,
+            },
+        ],
+        tools: toolsJson,
+    });
+
+    console.log(completion.message.content);
+    for (const toolCall of completion?.message?.toolCalls || []) {
+        // call mcp server with toolCallId
+        const toolCallResponse = await fetch(`${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/mcp/tools/${toolCall.function?.name}/call?${params.toString()}`, {
+            method: "POST",
+            body: toolCall.function?.arguments || "{}",
+        });
+        const toolCallResponseJson = await toolCallResponse.json();
+        console.log(JSON.stringify(toolCallResponseJson, null, 2));
+    }
+}
+
+async function runGemini(connection: string, message: string, dc: string) {
+    const gemini = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY || "",
+    });
+
+    const params = new URLSearchParams({
+        token: process.env.UNIFIED_API_KEY || "",
+        connection,
+        type: "gemini",
+        dc,
+    });
+
+    const serverUrl = `${process.env.UNIFIED_MCP_URL || 'https://mcp-api.unified.to'}/mcp?${params.toString()}`;
+
+
+
+
+    const transport = new StreamableHTTPClientTransport(new URL(serverUrl));
+    const client = new Client({
+        name: "unified-mcp",
+        version: "1.0.0"
+    });
+
+    await client.connect(transport);
+
+
+    const completion = await gemini.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: message,
+        config: {
+            tools: [mcpToTool(client)],
+        },
+    });
+    for (const chunk of (completion?.candidates || [])) {
+        console.log(JSON.stringify(chunk, null, 2));
+        if (chunk.content?.parts) {
+            for (const part of chunk.content.parts) {
+                if (part.text) {
+                    console.log(part.text);
+                }
+            }
+        }
+    }
 }
 
 main();

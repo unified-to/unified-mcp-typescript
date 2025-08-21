@@ -12,7 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.56.0",
+    "@google/genai": "^1.15.0",
+    "@modelcontextprotocol/sdk": "^1.17.3",
     "@unified-api/typescript-sdk": "^2.72.5",
+    "cohere-ai": "^7.18.1",
     "dotenv": "^17.2.1",
     "openai": "^5.12.0"
   },
