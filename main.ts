@@ -13,6 +13,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 // --action (gettools, prompt) - required
 // --model (openai, anthropic, cohere) - required if action is prompt
 // --message (prompt) - required if action is prompt
+// --include-external (true, false) - optional
+// --model-version (latest, 2025-04-04) - optional
+// --dc (local, dev, prod) - optional
 
 export async function main() {
     // Parse args
@@ -33,6 +36,8 @@ export async function main() {
     const model = argMap["model"];
     const message = argMap["message"];
     const dc = argMap["dc"] || "local";
+    const includeExternal = argMap["include-external"] === "true";
+    const modelVersion = argMap["model-version"] || "latest";
 
     if (!connection) {
         console.error("Missing required argument: --connection");
@@ -50,34 +55,35 @@ export async function main() {
 
     if (action === "gettools") {
         // Placeholder for gettools logic
-        await getTools(connection, process.env.UNIFIED_API_KEY || "", dc);
+        await getTools(connection, process.env.UNIFIED_API_KEY || "", dc, includeExternal);
         process.exit(0);
     }
 
     if (action === "prompt") {
         switch (model) {
             case "anthropic":
-                await runAnthropic(connection, message, dc);
+                await runAnthropic(connection, message, dc, includeExternal, modelVersion);
                 break;
             case "cohere":
-                await runCohere(connection, message, dc);
+                await runCohere(connection, message, dc, includeExternal, modelVersion);
                 break;
             case "gemini":
-                await runGemini(connection, message, dc);
+                await runGemini(connection, message, dc, includeExternal, modelVersion);
                 break;
             case "openai":
             default:
-                await runOpenAI(connection, message, dc);
+                await runOpenAI(connection, message, dc, includeExternal, modelVersion);
                 break;
         }
     }
 }
 
-async function getTools(connection: string, api_key: string, dc: string) {
+async function getTools(connection: string, api_key: string, dc: string, includeExternal: boolean) {
     const params = new URLSearchParams({
         token: api_key,
         connection,
         dc,
+        include_external_tools: includeExternal ? "true" : "false",
     });
 
     const tools = await fetch(`${process.env.UNIFIED_MCP_URL}/tools?${params.toString()}`);
@@ -87,7 +93,7 @@ async function getTools(connection: string, api_key: string, dc: string) {
 
 
 
-async function runOpenAI(connection: string, message: string, dc: string) {
+async function runOpenAI(connection: string, message: string, dc: string, includeExternal: boolean, modelVersion: string) {
     const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY || "",
     });
@@ -96,6 +102,7 @@ async function runOpenAI(connection: string, message: string, dc: string) {
         type: "openai",
         dc,
         connection,
+        include_external_tools: includeExternal ? "true" : "false",
     });
 
 
@@ -103,9 +110,14 @@ async function runOpenAI(connection: string, message: string, dc: string) {
 
     console.log("serverUrl", serverUrl);
 
-    // get the latest model from open ai
-    const models = await openai.models.list();
-    const latestModel = models.data[0].id;
+    let latestModel;
+    if (modelVersion === "latest") {
+        // get the latest model from open ai
+        const models = await openai.models.list();
+        latestModel = models.data[0].id;
+    } else {
+        latestModel = modelVersion;
+    }
 
     const completion = await openai.responses.create({
         model: latestModel,
@@ -127,11 +139,12 @@ async function runOpenAI(connection: string, message: string, dc: string) {
     }
 }
 
-async function runAnthropic(connection: string, message: string, dc: string) {
+async function runAnthropic(connection: string, message: string, dc: string, includeExternal: boolean, modelVersion: string) {
     const params = new URLSearchParams({
         token: process.env.UNIFIED_API_KEY || "",
         connection,
         dc,
+        include_external_tools: includeExternal ? "true" : "false",
     });
 
     const anthropic = new Anthropic({
@@ -143,9 +156,14 @@ async function runAnthropic(connection: string, message: string, dc: string) {
 
     console.log("serverUrl", serverUrl);
 
-    // get the latest model from anthropic
-    const models = await anthropic.models.list();
-    const latestModel = models.data[0].id;
+    let latestModel;
+    if (modelVersion === "latest") {
+        // get the latest model from anthropic
+        const models = await anthropic.models.list();
+        latestModel = models.data[0].id;
+    } else {
+        latestModel = modelVersion;
+    }
 
     const completion = await anthropic.beta.messages.create({
         model: latestModel,
@@ -171,7 +189,7 @@ async function runAnthropic(connection: string, message: string, dc: string) {
     console.log("response", JSON.stringify(completion, null, 2));
 }
 
-async function runCohere(connection: string, message: string, dc: string) {
+async function runCohere(connection: string, message: string, dc: string, includeExternal: boolean, _: string) {
 
     const cohereClient = new CohereClientV2({
         token: process.env.COHERE_API_KEY || "",
@@ -182,6 +200,7 @@ async function runCohere(connection: string, message: string, dc: string) {
         connection,
         type: "cohere",
         dc,
+        include_external_tools: includeExternal ? "true" : "false",
     });
 
     const tools = await fetch(`${process.env.UNIFIED_MCP_URL}/tools?${params.toString()}`);
@@ -209,7 +228,7 @@ async function runCohere(connection: string, message: string, dc: string) {
     }
 }
 
-async function runGemini(connection: string, message: string, dc: string) {
+async function runGemini(connection: string, message: string, dc: string, includeExternal: boolean, modelVersion: string) {
     const gemini = new GoogleGenAI({
         apiKey: process.env.GEMINI_API_KEY || "",
     });
@@ -219,11 +238,10 @@ async function runGemini(connection: string, message: string, dc: string) {
         connection,
         type: "gemini",
         dc,
+        include_external_tools: includeExternal ? "true" : "false",
     });
 
     const serverUrl = `${process.env.UNIFIED_MCP_URL}/mcp?${params.toString()}`;
-
-
 
 
     const transport = new StreamableHTTPClientTransport(new URL(serverUrl));
@@ -234,10 +252,14 @@ async function runGemini(connection: string, message: string, dc: string) {
 
     await client.connect(transport);
 
-    // get the latest model from gemini
-    const models = await gemini.models.list();
-    const latestModel = models.page.filter((model: any) => model.name.includes("gemini") && !model.name.includes("embedding")).pop()?.name || "gemini-2.0-flash";
-
+    let latestModel;
+    if (modelVersion === "latest") {
+        // get the latest model from gemini
+        const models = await gemini.models.list();
+        latestModel = models.page.filter((model: any) => model.name.includes("gemini") && !model.name.includes("embedding")).pop()?.name || "gemini-2.0-flash";
+    } else {
+        latestModel = modelVersion;
+    }
     const completion = await gemini.models.generateContent({
         model: latestModel?.replace("model/", ""),
         contents: message,

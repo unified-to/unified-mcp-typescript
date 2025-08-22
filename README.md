@@ -59,41 +59,60 @@ npm run build
 
 ### Command-Line Arguments
 
-- `--connection` (required): Your Unified workspace connection ID
-- `--action` (required): Action to perform (`gettools` or `prompt`)
-- `--model` (required for prompt action): AI model to use (`openai`, `anthropic`, `cohere`, or `gemini`)
-- `--message` (required for prompt action): The message/prompt to send
+#### Required Arguments
+- `--connection`: Your Unified workspace connection ID
+- `--api_key`: Your Unified API key for authentication
+- `--action`: Action to perform (`gettools` or `prompt`)
+
+#### Required for Prompt Action
+- `--model`: AI model to use (`openai`, `anthropic`, `cohere`, or `gemini`)
+- `--message`: The message/prompt to send
+
+#### Optional Arguments
+- `--include-external`: Include external tools (default: false, options: `true`, `false`)
+- `--model-version`: Model version to use (default: `latest`, can specify specific versions like `2025-04-04`)
+- `--dc`: Data center environment (default: `local`, options: `local`, `dev`, `prod`)
 
 ### Running Examples
 
 #### Get Available Tools
 
 ```bash
-node run start -- --connection YOUR_CONNECTION_ID --action gettools
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action gettools
+```
+
+With optional arguments:
+```bash
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action gettools --include-external true --dc prod
 ```
 
 #### OpenAI Prompt Example
 
 ```bash
-node run start -- --connection YOUR_CONNECTION_ID --action prompt --model openai --message "Create an email draft"
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action prompt --model openai --message "Create an email draft"
+```
+
+With optional arguments:
+```bash
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action prompt --model openai --message "Create an email draft" --model-version 2025-04-04 --include-external true --dc dev
 ```
 
 #### Anthropic Prompt Example
 
 ```bash
-node run start -- --connection YOUR_CONNECTION_ID --action prompt --model anthropic --message "Create a calendar event for tomorrow at 2pm"
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action prompt --model anthropic --message "Create a calendar event for tomorrow at 2pm"
 ```
 
 #### Cohere Prompt Example
 
 ```bash
-node run start -- --connection YOUR_CONNECTION_ID --action prompt --model cohere --message "Draft an email to the team about our upcoming project milestone"
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action prompt --model cohere --message "Draft an email to the team about our upcoming project milestone"
 ```
 
 #### Gemini Prompt Example
 
 ```bash
-node run start -- --connection YOUR_CONNECTION_ID --action prompt --model gemini --message "Schedule a client meeting and send a follow-up email"
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action prompt --model gemini --message "Schedule a client meeting and send a follow-up email"
 ```
 
 ## Configuration
@@ -121,6 +140,7 @@ The following environment variables must be configured in your `.env` file:
 
 - **`UNIFIED_API_KEY`**: Your Unified API key for accessing the MCP server
   - Get this from your [Unified Dashboard](https://app.unified.to/)
+  - Can be set as environment variable or passed via `--api_key` argument
   - Required for all operations
 
 #### MCP Server Configuration
@@ -133,6 +153,27 @@ The following environment variables must be configured in your `.env` file:
 - **Connection ID**: Pass your active Unified workspace connection ID using `--connection`
   - Find this in your [Unified Dashboard](https://app.unified.to/)
   - Required for all operations
+
+- **API Key**: Pass your Unified API key using `--api_key`
+  - Get this from your [Unified Dashboard](https://app.unified.to/)
+  - Alternative to setting `UNIFIED_API_KEY` environment variable
+  - Required for all operations
+
+### Optional Command-Line Arguments
+
+- **Include External Tools**: Use `--include-external true` to include external tools in the available toolset
+  - Default: `false`
+  - Useful when you need access to tools beyond the core MCP functionality
+
+- **Model Version**: Use `--model-version` to specify a particular model version
+  - Default: `latest` (automatically selects the newest available model)
+  - Examples: `2025-04-04`, `gpt-4`, `claude-3-sonnet`, etc.
+  - Overrides automatic model selection
+
+- **Data Center**: Use `--dc` to specify the data center environment
+  - Default: `local`
+  - Options: `local`, `dev`, `prod`
+  - Affects which MCP server endpoint is used
 
 ## Project Structure
 
@@ -152,7 +193,7 @@ mcp-test-script/
 To see what tools are available through the Unified MCP server:
 
 ```bash
-npm run start -- --connection conn_12345 --action gettools
+npm run start -- --connection conn_12345 --api_key your_api_key_here --action gettools
 ```
 
 ### OpenAI Integration
@@ -162,6 +203,7 @@ Create an email draft using OpenAI's response mode with streaming:
 ```bash
 npm run start -- \
   --connection conn_12345 \
+  --api_key your_api_key_here \
   --action prompt \
   --model openai \
   --message "Create an email to john@example.com about the quarterly report"
@@ -180,6 +222,7 @@ Create a calendar event using Claude:
 ```bash
 npm run start -- \
   --connection conn_12345 \
+  --api_key your_api_key_here \
   --action prompt \
   --model anthropic \
   --message "Schedule a team meeting for next Friday at 3pm titled 'Project Review'"
@@ -198,6 +241,7 @@ Create and send an email using Cohere's Command model:
 ```bash
 npm run start -- \
   --connection conn_12345 \
+  --api_key your_api_key_here \
   --action prompt \
   --model cohere \
   --message "Compose and send an email to the marketing team about our new product launch timeline"
@@ -216,6 +260,7 @@ Manage multiple tasks using Google's Gemini model:
 ```bash
 npm run start -- \
   --connection conn_12345 \
+  --api_key your_api_key_here \
   --action prompt \
   --model gemini \
   --message "Check my calendar for conflicts and schedule a client presentation for next week"
