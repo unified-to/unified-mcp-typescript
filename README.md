@@ -72,6 +72,7 @@ npm run build
 - `--include-external`: Include external tools (default: false, options: `true`, `false`)
 - `--model-version`: Model version to use (default: `latest`, can specify specific versions like `2025-04-04`)
 - `--dc`: Data center environment (default: `local`, options: `local`, `dev`, `prod`)
+- `--tool-ids`: Comma-separated list of specific tool IDs to filter (e.g., `email_create,calendar_event`)
 
 ### Running Examples
 
@@ -83,7 +84,7 @@ npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action
 
 With optional arguments:
 ```bash
-npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action gettools --include-external true --dc prod
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action gettools --include-external true --dc prod --tool-ids "email_create,calendar_event"
 ```
 
 #### OpenAI Prompt Example
@@ -94,7 +95,7 @@ npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action
 
 With optional arguments:
 ```bash
-npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action prompt --model openai --message "Create an email draft" --model-version 2025-04-04 --include-external true --dc dev
+npm run start -- --connection YOUR_CONNECTION_ID --api_key YOUR_API_KEY --action prompt --model openai --message "Create an email draft" --model-version 2025-04-04 --include-external true --dc dev --tool-ids "email_create,email_send"
 ```
 
 #### Anthropic Prompt Example
@@ -175,6 +176,12 @@ The following environment variables must be configured in your `.env` file:
   - Options: `local`, `dev`, `prod`
   - Affects which MCP server endpoint is used
 
+- **Tool IDs**: Use `--tool-ids` to filter specific tools
+  - Accepts comma-separated list of tool identifiers
+  - Example: `--tool-ids "email_create,calendar_event,contact_list"`
+  - Automatically trims whitespace from each tool ID
+  - When specified, only the listed tools will be available for use
+
 ## Project Structure
 
 ```
@@ -196,6 +203,12 @@ To see what tools are available through the Unified MCP server:
 npm run start -- --connection conn_12345 --api_key your_api_key_here --action gettools
 ```
 
+To get only specific tools by filtering with tool IDs:
+
+```bash
+npm run start -- --connection conn_12345 --api_key your_api_key_here --action gettools --tool-ids "email_create,calendar_event,contact_list"
+```
+
 ### OpenAI Integration
 
 Create an email draft using OpenAI's response mode with streaming:
@@ -207,6 +220,18 @@ npm run start -- \
   --action prompt \
   --model openai \
   --message "Create an email to john@example.com about the quarterly report"
+```
+
+With tool filtering to only use email-related tools:
+
+```bash
+npm run start -- \
+  --connection conn_12345 \
+  --api_key your_api_key_here \
+  --action prompt \
+  --model openai \
+  --message "Create an email to john@example.com about the quarterly report" \
+  --tool-ids "email_create,email_send,contact_list"
 ```
 
 This demonstrates:
